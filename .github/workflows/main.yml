@@ -44,41 +44,6 @@ jobs:
                   name: mobsfscan.sarif
                   path: mobsfscan.sarif
 
-    snyk:
-        needs: [ validation ]
-        name: "Snyk"
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v4
-            -   name: Download snyk
-                run: |
-                    curl -o ./snyk-linux https://downloads.snyk.io/cli/stable/snyk-linux && \
-                    curl -o ./snyk-linux.sha256 https://downloads.snyk.io/cli/stable/snyk-linux.sha256 && \
-                    sha256sum -c snyk-linux.sha256
-            -   name: Install snyk
-                run: |
-                    mv snyk-linux /usr/local/bin/snyk && \
-                    chmod +x /usr/local/bin/snyk
-            -   name: Execute snyk monitor
-                env:
-                    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-                run: |
-                    snyk monitor --prune-repeated-subdependencies --package-manager=gradle --file=certificatetransparency-android/build.gradle.kts || (exit "$(($? == 1 ? 0 : $?))")
-            -   name: Execute snyk test
-                env:
-                    SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-                run: |
-                    snyk test --sarif-file-output=snyk.sarif --prune-repeated-subdependencies --package-manager=gradle --file=certificatetransparency-android/build.gradle.kts || (exit "$(($? == 1 ? 0 : $?))")
-            -   name: Upload snyk report
-                uses: github/codeql-action/upload-sarif@v3
-                with:
-                    sarif_file: snyk.sarif
-            -   uses: actions/upload-artifact@v4
-                with:
-                    name: snyk.sarif
-                    path: snyk.sarif
-                    retention-days: 1
-
     codeql-java-kotlin:
         needs: [ validation ]
         name: CodeQL (java-kotlin)
